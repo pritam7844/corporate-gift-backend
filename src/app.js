@@ -21,7 +21,7 @@ app.use((req, res, next) => {
   if (process.env.ENABLE_LOGGING === 'true') {
     const start = Date.now();
     console.log(`\n[>>> REQUEST] ${req.method} ${req.url}`);
-    if (Object.keys(req.body).length) console.log('Body:', JSON.stringify(req.body, null, 2));
+    if (req.body && Object.keys(req.body).length) console.log('Body:', JSON.stringify(req.body, null, 2));
 
     const oldJson = res.json;
     res.json = function (body) {
