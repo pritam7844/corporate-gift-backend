@@ -69,6 +69,7 @@ export const assignGlobalEventToCompany = async (req, res, next) => {
       products: template.products,
       companyId: companyId,
       isGlobal: false,
+      clonedFrom: globalEventId,
       startDate: startDate || template.startDate,
       endDate: endDate || template.endDate,
       status: 'active'
@@ -86,6 +87,37 @@ export const getEventByID = async (req, res, next) => {
   try {
     const event = await eventService.getEventById(req.params.id);
     res.status(200).json({ success: true, data: event });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateEvent = async (req, res, next) => {
+  try {
+    const event = await eventService.updateEventById(req.params.id, req.body);
+
+    // If this is a global template, cascade name/date changes to all company clones
+    if (event && event.isGlobal) {
+      const cascadeFields = {};
+      if (req.body.name !== undefined) cascadeFields.name = req.body.name;
+      if (req.body.startDate !== undefined) cascadeFields.startDate = req.body.startDate;
+      if (req.body.endDate !== undefined) cascadeFields.endDate = req.body.endDate;
+
+      if (Object.keys(cascadeFields).length > 0) {
+        await Event.updateMany({ clonedFrom: req.params.id }, { $set: cascadeFields });
+      }
+    }
+
+    res.status(200).json({ success: true, data: event });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteEvent = async (req, res, next) => {
+  try {
+    await eventService.deleteEventById(req.params.id);
+    res.status(200).json({ success: true, message: 'Event deleted successfully' });
   } catch (error) {
     next(error);
   }

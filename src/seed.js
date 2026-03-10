@@ -19,27 +19,7 @@ const seedDB = async () => {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('🔗 Connected to Database for Seeding...');
 
-    // 2. Clear existing data
-    await User.deleteMany({});
-    await Company.deleteMany({});
-    await Product.deleteMany({});
-    await Event.deleteMany({});
-    console.log('🧹 Cleared existing database records.');
-
-    // 3. Seed Admin
-    const adminEmail = 'admin@gmail.com';
-    const plainPassword = '123456';
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(plainPassword, salt);
-
-    const adminUser = await User.create({
-      name: 'System Admin',
-      email: adminEmail,
-      password: hashedPassword,
-      role: 'admin',
-      companyId: null
-    });
-    console.log('👑 Admin user seeded successfully! (admin@gmail.com / 123456)');
+    // Removed Admin Seeding logic, extracted to seed-admin.js
 
     // 4. Seed Companies
     const tata = await Company.create({

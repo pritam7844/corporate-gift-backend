@@ -1,4 +1,5 @@
 import Company from './company.model.js';
+import User from '../users/user.model.js';
 
 export const createCompany = async (companyData) => {
   const { name, subdomain, departments, logo } = companyData;
@@ -39,7 +40,14 @@ export const deleteCompany = async (id) => {
 };
 
 export const getAllCompanies = async () => {
-  return await Company.find({}).sort({ createdAt: -1 });
+  const companies = await Company.find({}).sort({ createdAt: -1 }).lean();
+  const enhancedCompanies = await Promise.all(
+    companies.map(async (company) => {
+      const employeeCount = await User.countDocuments({ companyId: company._id, role: 'company_user' });
+      return { ...company, employeeCount };
+    })
+  );
+  return enhancedCompanies;
 };
 
 export const getCompanyBySubdomain = async (subdomain) => {

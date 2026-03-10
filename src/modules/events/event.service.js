@@ -8,17 +8,21 @@ export const createEvent = async (eventData) => {
 export const addProductsToEvent = async (eventId, productIds) => {
   return await Event.findByIdAndUpdate(
     eventId,
-    { $addToSet: { products: { $each: productIds } } },
+    { $set: { products: productIds } },
     { new: true }
   ).populate('products');
 };
 
 export const getEventsByCompany = async (companyId) => {
-  // Employees only see active events explicitly assigned to their companyId.
-  // Global events (isGlobal: true) are treated as templates and are hidden here.
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // normalize to start of day
+
+  // Return only events that are within today's date window
+  // startDate <= today <= endDate
   return await Event.find({
     companyId,
-    status: 'active'
+    startDate: { $lte: today },
+    endDate: { $gte: today },
   }).populate('products');
 };
 
@@ -36,4 +40,12 @@ export const getEventById = async (id) => {
     .populate('products');
   if (!event) throw new Error('Event not found');
   return event;
+};
+
+export const updateEventById = async (id, updateData) => {
+  return await Event.findByIdAndUpdate(id, updateData, { new: true });
+};
+
+export const deleteEventById = async (id) => {
+  return await Event.findByIdAndDelete(id);
 };

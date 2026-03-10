@@ -2,6 +2,8 @@ import express from 'express';
 import {
   createEvent,
   updateEventProducts,
+  updateEvent,
+  deleteEvent,
   getCompanyEvents,
   getAllEvents,
   assignGlobalEventToCompany,
@@ -20,5 +22,7 @@ router.get('/:id', isLoggedIn, getEventByID);
 // Route to "Add Products" to an existing event
 router.patch('/add-products', isLoggedIn, isAdmin, updateEventProducts);
 router.post('/assign', isLoggedIn, isAdmin, assignGlobalEventToCompany);
+router.put('/:id', isLoggedIn, isAdmin, updateEvent);
+router.delete('/:id', isLoggedIn, isAdmin, deleteEvent);
 
 export default router;

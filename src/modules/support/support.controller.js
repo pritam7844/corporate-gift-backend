@@ -33,6 +33,27 @@ export const getAllTickets = async (req, res, next) => {
     }
 };
 
+export const getUserTickets = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+
+        // Fetch user document to get email
+        const user = await import('../users/user.model.js').then(m => m.default.findById(userId));
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        const tickets = await Support.find({ email: user.email })
+            .populate('companyId', 'name subdomain')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({ success: true, data: tickets });
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const updateTicketStatus = async (req, res, next) => {
     try {
         const { id } = req.params;

@@ -18,8 +18,7 @@ export const sendEmail = async (options) => {
       to: options.to,
       subject: options.subject,
       text: options.text,
-      // You can also pass HTML if you want styled emails later
-      // html: options.html 
+      html: options.html
     };
 
     // 3. Send the email

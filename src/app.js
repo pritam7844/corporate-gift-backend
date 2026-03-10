@@ -10,6 +10,7 @@ import requestRoutes from './modules/gift-request/request.routes.js';
 import userRoutes from './modules/users/user.routes.js';
 import cartRoutes from './modules/cart/cart.routes.js';
 import supportRoutes from './modules/support/support.routes.js';
+import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.use('/events', eventRoutes);
 app.use('/cart', cartRoutes);
 app.use('/gift-requests', requestRoutes);
 app.use('/users', userRoutes);
+app.use('/dashboard', dashboardRoutes);
 app.use('/support', supportRoutes);
 
 // Error Middleware (Standard)

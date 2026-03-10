@@ -24,6 +24,7 @@ router.get('/my-requests', isLoggedIn, getUserRequests);
  * @access  Private (Admin Only)
  */
 router.get('/', isLoggedIn, isAdmin, getRequests);
+router.get('/company/:companyId', isLoggedIn, isAdmin, getRequests);
 
 /**
  * @route   PUT /api/gift-requests/:id/status
