@@ -1,8 +1,9 @@
 import Request from './request.model.js';
 import Company from '../company/company.model.js';
-// We will import your notification utilities here
 import { sendEmail } from '../../utils/sendEmail.js';
 import { sendWhatsapp } from '../../utils/sendWhatsapp.js';
+import { generateInvoice } from '../../utils/generateInvoice.js';
+import axios from 'axios';
 
 export const submitGiftRequest = async (requestData) => {
   // 1. Save the request to the database
@@ -49,7 +50,7 @@ export const submitGiftRequest = async (requestData) => {
       <div style="${sharedStyles}">
         <div style="background: #2563eb; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
           <h1 style="margin: 0; font-size: 24px;">New Gift Selection Received!</h1>
-          <p style="margin: 5px 0 0; opacity: 0.9;">Order #${request._id.toString().slice(-6).toUpperCase()}</p>
+          <p style="margin: 5px 0 0; opacity: 0.9;">Order #${request.orderId}</p>
         </div>
         <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
           <div style="margin-bottom: 25px;">
@@ -65,6 +66,34 @@ export const submitGiftRequest = async (requestData) => {
             <p><strong>Phone:</strong> ${employee.phone}</p>
             <p><strong>Employee ID:</strong> ${employee.employeeId || 'N/A'}</p>
             <p><strong>Address:</strong> ${employee.address}</p>
+          </div>
+
+          ${request.customization?.isBrandingRequired ? `
+          <div style="margin-bottom: 25px; background: #fff7ed; padding: 15px; border-radius: 8px; border: 1px solid #ffedd5;">
+            <h2 style="font-size: 18px; color: #9a3412; border-bottom: 2px solid #ffedd5; padding-bottom: 8px; margin-top: 0;">Branding Requirements</h2>
+            <p><strong>Type:</strong> ${request.customization.brandingType}</p>
+            <p><strong>Positions:</strong> ${request.customization.brandingPositions}</p>
+            <p><strong>Size:</strong> ${request.customization.brandingSize}</p>
+            ${request.customization.brandingLogo ? `
+              <p><strong>Branding Logo:</strong> <a href="${request.customization.brandingLogo}" target="_blank" style="color: #2563eb; font-weight: bold;">View Logo File</a></p>
+              <div style="margin-top: 10px;">
+                <img src="${request.customization.brandingLogo}" alt="Logo" style="max-width: 200px; max-height: 100px; border: 1px solid #ddd; border-radius: 4px;" />
+              </div>
+            ` : ''}
+          </div>
+          ` : `
+          <div style="margin-bottom: 25px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
+            <p style="margin: 0; color: #64748b; font-weight: bold;">NO BRANDING REQUIRED</p>
+          </div>
+          `}
+
+          <div style="margin-bottom: 25px; background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #dcfce7;">
+            <h2 style="font-size: 18px; color: #166534; border-bottom: 2px solid #dcfce7; padding-bottom: 8px; margin-top: 0;">Shipping & Timeline</h2>
+            <p><strong>Delivery Type:</strong> ${request.shippingDetails?.deliveryType || 'Single Location'}</p>
+            ${request.shippingDetails?.deliveryType === 'Multiple Locations' ? `
+              <p><strong>Multiple Locations Info:</strong> ${request.shippingDetails.multipleLocations}</p>
+            ` : ''}
+            <p><strong>Required Timeline:</strong> ${request.shippingDetails?.deliveryTimeline || 'N/A'}</p>
           </div>
 
           <div style="margin-bottom: 25px;">
@@ -110,6 +139,9 @@ export const submitGiftRequest = async (requestData) => {
           <div style="margin: 20px 0; padding: 15px; background: #f0fdf4; border-radius: 8px;">
             <p style="margin: 0;"><strong>Shipping To:</strong></p>
             <p style="margin: 5px 0 0;">${employee.address}</p>
+            ${request.shippingDetails?.deliveryTimeline ? `
+              <p style="margin: 10px 0 0; font-size: 13px; color: #166534;"><strong>Timeline:</strong> ${request.shippingDetails.deliveryTimeline}</p>
+            ` : ''}
           </div>
 
           <table style="width: 100%; border-collapse: collapse;">
@@ -136,13 +168,48 @@ export const submitGiftRequest = async (requestData) => {
       </div>
     `;
 
-    // Send Email to Admin
+    // Generate Invoice PDF
+    let invoicePdf = null;
+    try {
+      invoicePdf = await generateInvoice(populatedRequest);
+    } catch (pdfErr) {
+      console.error('Invoice PDF generation failed:', pdfErr.message);
+    }
+
+    // Send Email to Admin (with invoice PDF attachment)
     if (adminEmail) {
+      const attachments = invoicePdf
+        ? [{
+          filename: `Invoice-${populatedRequest.orderId}.pdf`,
+          content: invoicePdf,
+          contentType: 'application/pdf'
+        }]
+        : [];
+
+      // Add Branding Logo to attachments if present
+      if (request.customization?.brandingLogo) {
+        try {
+          const logoResponse = await axios.get(request.customization.brandingLogo, { responseType: 'arraybuffer' });
+          const logoBuffer = Buffer.from(logoResponse.data, 'binary');
+
+          // Get extension from URL or fallback to png
+          const extension = request.customization.brandingLogo.split('.').pop().split(/\#|\?/)[0] || 'png';
+
+          attachments.push({
+            filename: `Branding-Logo.${extension}`,
+            content: logoBuffer
+          });
+        } catch (logoErr) {
+          console.error('Failed to attach logo to email:', logoErr.message);
+        }
+      }
+
       await sendEmail({
         to: adminEmail,
-        subject: `🚨 New Order: ${company?.name || 'N/A'} - ${employee.name}`,
+        subject: `New Order: ${company?.name || 'N/A'} - ${employee.name}`,
         html: adminHtml,
-        text: `New order from ${employee.name} at ${company?.name}. Items: ${products.length}. Total: ₹${grandTotal.toLocaleString()}`
+        text: `New order from ${employee.name} at ${company?.name}. Items: ${products.length}. Total: ₹${grandTotal.toLocaleString()}`,
+        attachments
       });
     }
 

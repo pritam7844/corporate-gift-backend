@@ -18,7 +18,8 @@ export const sendEmail = async (options) => {
       to: options.to,
       subject: options.subject,
       text: options.text,
-      html: options.html
+      html: options.html,
+      attachments: options.attachments || []
     };
 
     // 3. Send the email

@@ -20,6 +20,18 @@ const requestSchema = new mongoose.Schema({
     employeeId: { type: String }, // Optional
     department: { type: String } // Optional
   },
+  customization: {
+    isBrandingRequired: { type: Boolean, default: false },
+    brandingType: { type: String }, // Digital Print, Screen Print, etc.
+    brandingPositions: { type: Number }, // 1, 2, 3
+    brandingSize: { type: String }, // 1-3, 3-5, 5-10 inches
+    brandingLogo: { type: String } // Cloudinary URL
+  },
+  shippingDetails: {
+    deliveryType: { type: String, enum: ['Single Location', 'Multiple Locations'], default: 'Single Location' },
+    multipleLocations: { type: String }, // Pincodes or addresses for multiple locations
+    deliveryTimeline: { type: String } // Required delivery date/timeline
+  },
   selectedProducts: [{
     productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
     quantity: { type: Number, required: true, default: 1 },
@@ -29,8 +41,56 @@ const requestSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['Pending', 'Approved', 'Shipped', 'Delivered'],
-    default: 'Pending'
+    default: 'Approved'
+  },
+  orderId: {
+    type: String,
+    unique: true,
+    sparse: true
   }
 }, { timestamps: true });
+
+// Pre-save middleware to generate a unique 10-character alphanumeric Order ID
+requestSchema.pre('save', async function () {
+  if (!this.isNew || this.orderId) {
+    return;
+  }
+
+  // Fetch the company to get its name for the prefix
+  const company = await mongoose.models.Company.findById(this.companyId).select('name');
+  let prefix = 'ORDER'; // Fallback
+
+  if (company && company.name) {
+    // Remove spaces and special characters, convert to uppercase, take first 6 chars
+    prefix = company.name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().substring(0, 6);
+  }
+
+  if (prefix.length === 0) {
+    prefix = 'ORD';
+  }
+
+  const randomLength = 10 - prefix.length;
+  let isUnique = false;
+  let newOrderId = '';
+
+  while (!isUnique) {
+    // Generate remaining random alphanumeric characters
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let randomPart = '';
+    for (let i = 0; i < randomLength; i++) {
+      randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    newOrderId = prefix + randomPart;
+
+    // Check if generated orderId already exists
+    const existingRequest = await mongoose.models.Request.findOne({ orderId: newOrderId });
+    if (!existingRequest) {
+      isUnique = true;
+    }
+  }
+
+  this.orderId = newOrderId;
+});
 
 export default mongoose.model('Request', requestSchema);

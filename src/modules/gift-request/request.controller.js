@@ -5,7 +5,7 @@ export const createRequest = async (req, res, next) => {
     const employeeId = req.user.id;
     const companyId = req.user.companyId || req.body.companyId;
 
-    const { eventId, employeeDetails, selectedProducts } = req.body;
+    const { eventId, employeeDetails, selectedProducts, customization, shippingDetails } = req.body;
 
     if (!selectedProducts || selectedProducts.length === 0) {
       return res.status(400).json({ success: false, message: 'Your cart is empty.' });
@@ -15,7 +15,9 @@ export const createRequest = async (req, res, next) => {
       companyId: companyId,
       eventId: eventId,
       employeeDetails: employeeDetails,
-      selectedProducts: selectedProducts
+      selectedProducts: selectedProducts,
+      customization: customization,
+      shippingDetails: shippingDetails
     };
 
     // Submit the request
@@ -27,6 +29,7 @@ export const createRequest = async (req, res, next) => {
       data: request
     });
   } catch (error) {
+    console.error('CREATE REQUEST ERROR:', error);
     next(error);
   }
 };
