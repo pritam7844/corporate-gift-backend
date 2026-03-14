@@ -65,7 +65,7 @@ export const submitGiftRequest = async (requestData) => {
             <p><strong>Email:</strong> ${employee.email}</p>
             <p><strong>Phone:</strong> ${employee.phone}</p>
             <p><strong>Employee ID:</strong> ${employee.employeeId || 'N/A'}</p>
-            <p><strong>Address:</strong> ${employee.address}</p>
+            <p><strong>Address:</strong><br/>${request.shippingDetails?.deliveryType === 'Multiple Locations' ? (Array.isArray(request.shippingDetails.multipleLocations) ? request.shippingDetails.multipleLocations.join('<br/>') : request.shippingDetails.multipleLocations) : employee.address}</p>
           </div>
 
           ${request.customization?.isBrandingRequired ? `
@@ -91,7 +91,10 @@ export const submitGiftRequest = async (requestData) => {
             <h2 style="font-size: 18px; color: #166534; border-bottom: 2px solid #dcfce7; padding-bottom: 8px; margin-top: 0;">Shipping & Timeline</h2>
             <p><strong>Delivery Type:</strong> ${request.shippingDetails?.deliveryType || 'Single Location'}</p>
             ${request.shippingDetails?.deliveryType === 'Multiple Locations' ? `
-              <p><strong>Multiple Locations Info:</strong> ${request.shippingDetails.multipleLocations}</p>
+              <p><strong>Multiple Locations:</strong></p>
+              <ul style="margin-top: 5px; padding-left: 20px;">
+                ${request.shippingDetails.multipleLocations.map((loc, idx) => `<li style="margin-bottom: 5px;"><strong>Location ${idx + 1}:</strong> ${loc}</li>`).join('')}
+              </ul>
             ` : ''}
             <p><strong>Required Timeline:</strong> ${request.shippingDetails?.deliveryTimeline || 'N/A'}</p>
           </div>
@@ -138,7 +141,12 @@ export const submitGiftRequest = async (requestData) => {
           
           <div style="margin: 20px 0; padding: 15px; background: #f0fdf4; border-radius: 8px;">
             <p style="margin: 0;"><strong>Shipping To:</strong></p>
-            <p style="margin: 5px 0 0;">${employee.address}</p>
+            <p style="margin: 5px 0 0;">${request.shippingDetails?.deliveryType === 'Multiple Locations' ? 'Multiple Locations:' : employee.address}</p>
+            ${request.shippingDetails?.deliveryType === 'Multiple Locations' ? `
+              <ul style="margin: 10px 0 0; padding-left: 20px; font-size: 13px; color: #4b5563;">
+                ${request.shippingDetails.multipleLocations.map((loc, idx) => `<li style="margin-bottom: 4px;"><strong>#${idx + 1}</strong>: ${loc}</li>`).join('')}
+              </ul>
+            ` : ''}
             ${request.shippingDetails?.deliveryTimeline ? `
               <p style="margin: 10px 0 0; font-size: 13px; color: #166534;"><strong>Timeline:</strong> ${request.shippingDetails.deliveryTimeline}</p>
             ` : ''}

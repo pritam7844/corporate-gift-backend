@@ -16,8 +16,8 @@ const requestSchema = new mongoose.Schema({
     email: { type: String, required: true },
     phone: { type: String, required: true },
     whatsapp: { type: String },
-    address: { type: String, required: true },
-    employeeId: { type: String }, // Optional
+    address: { type: String }, // Made optional to support Multiple Locations
+    employeeId: { type: String, required: true }, // Mandatory as requested
     department: { type: String } // Optional
   },
   customization: {
@@ -29,7 +29,7 @@ const requestSchema = new mongoose.Schema({
   },
   shippingDetails: {
     deliveryType: { type: String, enum: ['Single Location', 'Multiple Locations'], default: 'Single Location' },
-    multipleLocations: { type: String }, // Pincodes or addresses for multiple locations
+    multipleLocations: [{ type: String }], // Array of addresses for multiple locations
     deliveryTimeline: { type: String } // Required delivery date/timeline
   },
   selectedProducts: [{
