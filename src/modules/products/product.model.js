@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const productSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: { type: String, default: '' }, // Product description
-  image: { type: String }, // Store URL or base64
+  images: [{ type: String }], // Store URLs or base64
   category: { type: String },
   actualPrice: { type: Number, required: true }, // For Admin reference
   discountedPrice: { type: Number }, // Price shown to employees

@@ -29,7 +29,7 @@ export const submitGiftRequest = async (requestData) => {
       <tr>
         <td style="padding: 12px; border-bottom: 1px solid #eee;">
           <div style="display: flex; align-items: center;">
-            <img src="${p.productId.image}" alt="${p.productId.name}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; margin-right: 10px;" />
+            <img src="${p.productId.images?.[0] || p.productId.image}" alt="${p.productId.name}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; margin-right: 10px;" />
             <span>${p.productId.name}</span>
           </div>
         </td>
@@ -246,7 +246,7 @@ export const getAllRequests = async (filter = {}) => {
   return await Request.find(filter)
     .populate('companyId', 'name subdomain')
     .populate('eventId', 'name')
-    .populate('selectedProducts.productId', 'name image category')
+    .populate('selectedProducts.productId', 'name images image category')
     .sort({ createdAt: -1 });
 };
 
@@ -254,7 +254,7 @@ export const getAllRequests = async (filter = {}) => {
 export const getUserRequests = async (email) => {
   return await Request.find({ 'employeeDetails.email': email })
     .populate('eventId', 'name')
-    .populate('selectedProducts.productId', 'name image category')
+    .populate('selectedProducts.productId', 'name images image category')
     .sort({ createdAt: -1 });
 };
 
@@ -264,5 +264,5 @@ export const updateRequestStatus = async (requestId, status) => {
     requestId,
     { status },
     { new: true, runValidators: true }
-  ).populate('eventId', 'name').populate('selectedProducts.productId', 'name image category');
+  ).populate('eventId', 'name').populate('selectedProducts.productId', 'name images image category');
 };

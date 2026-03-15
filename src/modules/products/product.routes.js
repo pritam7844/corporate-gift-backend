@@ -17,9 +17,9 @@ const upload = multer({
 });
 
 // Admin Only Routes
-router.post('/', isLoggedIn, isAdmin, upload.single('image'), addProduct);
+router.post('/', isLoggedIn, isAdmin, upload.array('images', 5), addProduct);
 router.get('/', isLoggedIn, isAdmin, getProducts);
-router.put('/:id', isLoggedIn, isAdmin, upload.single('image'), updateProduct);
+router.put('/:id', isLoggedIn, isAdmin, upload.array('images', 5), updateProduct);
 router.delete('/:id', isLoggedIn, isAdmin, removeProduct);
 
 export default router;

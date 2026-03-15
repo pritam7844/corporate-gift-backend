@@ -5,19 +5,21 @@ export const addProduct = async (req, res, next) => {
   try {
     const productData = { ...req.body };
 
-    // Handle Image Upload if file exists
-    if (req.file) {
-      const uploadResult = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: 'products', resource_type: 'auto' },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
-        );
-        stream.end(req.file.buffer);
+    // Handle Multiple Image Uploads if files exist
+    if (req.files && req.files.length > 0) {
+      const uploadPromises = req.files.map(file => {
+        return new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: 'products', resource_type: 'auto' },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result.secure_url);
+            }
+          );
+          stream.end(file.buffer);
+        });
       });
-      productData.image = uploadResult.secure_url;
+      productData.images = await Promise.all(uploadPromises);
     }
 
     // Parse numeric fields if they come as strings from FormData
@@ -69,18 +71,33 @@ export const updateProduct = async (req, res, next) => {
   try {
     const productData = { ...req.body };
 
-    if (req.file) {
-      const uploadResult = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: 'products', resource_type: 'auto' },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
-        );
-        stream.end(req.file.buffer);
+    let existingImages = [];
+    if (req.body.images) {
+      try {
+        existingImages = typeof req.body.images === 'string' ? JSON.parse(req.body.images) : req.body.images;
+        if (!Array.isArray(existingImages)) existingImages = [existingImages];
+      } catch (e) {
+        existingImages = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
+      }
+    }
+
+    if (req.files && req.files.length > 0) {
+      const uploadPromises = req.files.map(file => {
+        return new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: 'products', resource_type: 'auto' },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result.secure_url);
+            }
+          );
+          stream.end(file.buffer);
+        });
       });
-      productData.image = uploadResult.secure_url;
+      const newImages = await Promise.all(uploadPromises);
+      productData.images = [...existingImages, ...newImages];
+    } else {
+      productData.images = existingImages;
     }
 
     if (productData.actualPrice) productData.actualPrice = Number(productData.actualPrice);
