@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import './config/db.js'; // Ensure DB connects
 
 import authRoutes from './modules/auth/auth.routes.js';
 import companyRoutes from './modules/company/company.routes.js';
@@ -14,6 +13,21 @@ import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
 import uploadRoutes from './modules/upload/upload.routes.js';
 
 const app = express();
+
+// Database Connection Middleware (Ensure DB is connected before processing requests)
+app.use(async (req, res, next) => {
+  try {
+    const connectDB = (await import('./config/db.js')).default;
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error('Database connection failed in middleware:', error.message);
+    res.status(503).json({ 
+      success: false, 
+      message: 'Service Temporarily Unavailable: Database connection failed' 
+    });
+  }
+});
 
 app.use(cors());
 app.use(express.json());
