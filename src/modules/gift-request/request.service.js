@@ -65,15 +65,15 @@ export const submitGiftRequest = async (requestData) => {
             <p><strong>Email:</strong> ${employee.email}</p>
             <p><strong>Phone:</strong> ${employee.phone}</p>
             <p><strong>Employee ID:</strong> ${employee.employeeId || 'N/A'}</p>
-            <p><strong>Address:</strong><br/>${request.shippingDetails?.deliveryType === 'Multiple Locations' ? (Array.isArray(request.shippingDetails.multipleLocations) ? request.shippingDetails.multipleLocations.join('<br/>') : request.shippingDetails.multipleLocations) : employee.address}</p>
+            <p><strong>Delivery Address:</strong><br/>${employee.address}</p>
           </div>
 
           ${request.customization?.isBrandingRequired ? `
           <div style="margin-bottom: 25px; background: #fff7ed; padding: 15px; border-radius: 8px; border: 1px solid #ffedd5;">
             <h2 style="font-size: 18px; color: #9a3412; border-bottom: 2px solid #ffedd5; padding-bottom: 8px; margin-top: 0;">Branding Requirements</h2>
             <p><strong>Type:</strong> ${request.customization.brandingType}</p>
-            <p><strong>Positions:</strong> ${request.customization.brandingPositions}</p>
-            <p><strong>Size:</strong> ${request.customization.brandingSize}</p>
+            <p><strong>Positions:</strong> ${request.customization.brandingPositions === 'Custom' ? request.customization.customBrandingPositions : request.customization.brandingPositions}</p>
+            <p><strong>Size:</strong> ${request.customization.brandingSize === 'Custom' ? request.customization.customBrandingSize : request.customization.brandingSize}</p>
             ${request.customization.brandingLogo ? `
               <p><strong>Branding Logo:</strong> <a href="${request.customization.brandingLogo}" target="_blank" style="color: #2563eb; font-weight: bold;">View Logo File</a></p>
               <div style="margin-top: 10px;">
@@ -88,16 +88,16 @@ export const submitGiftRequest = async (requestData) => {
           `}
 
           <div style="margin-bottom: 25px; background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #dcfce7;">
-            <h2 style="font-size: 18px; color: #166534; border-bottom: 2px solid #dcfce7; padding-bottom: 8px; margin-top: 0;">Shipping & Timeline</h2>
-            <p><strong>Delivery Type:</strong> ${request.shippingDetails?.deliveryType || 'Single Location'}</p>
-            ${request.shippingDetails?.deliveryType === 'Multiple Locations' ? `
-              <p><strong>Multiple Locations:</strong></p>
-              <ul style="margin-top: 5px; padding-left: 20px;">
-                ${request.shippingDetails.multipleLocations.map((loc, idx) => `<li style="margin-bottom: 5px;"><strong>Location ${idx + 1}:</strong> ${loc}</li>`).join('')}
-              </ul>
-            ` : ''}
-            <p><strong>Required Timeline:</strong> ${request.shippingDetails?.deliveryTimeline || 'N/A'}</p>
+            <h2 style="font-size: 18px; color: #166534; border-bottom: 2px solid #dcfce7; padding-bottom: 8px; margin-top: 0;">Shipping</h2>
+            <p><strong>Delivery Address:</strong><br/>${employee.address}</p>
           </div>
+
+          ${employee.additionalRequirements ? `
+          <div style="margin-bottom: 25px; background: #ebf5ff; padding: 15px; border-radius: 8px; border: 1px solid #d1e9ff;">
+            <h2 style="font-size: 18px; color: #1e40af; border-bottom: 2px solid #d1e9ff; padding-bottom: 8px; margin-top: 0;">Additional Requirements / Notes</h2>
+            <p style="margin: 5px 0 0; white-space: pre-wrap;">${employee.additionalRequirements}</p>
+          </div>
+          ` : ''}
 
           <div style="margin-bottom: 25px;">
             <h2 style="font-size: 18px; color: #1e40af; border-bottom: 2px solid #eff6ff; padding-bottom: 8px;">Event: ${event?.name || 'Standard'}</h2>
@@ -140,16 +140,9 @@ export const submitGiftRequest = async (requestData) => {
           <p>Thank you for participating in the <strong>${event?.name || 'Corporate Gift'}</strong> event! We have received your selection and are preparing it for delivery.</p>
           
           <div style="margin: 20px 0; padding: 15px; background: #f0fdf4; border-radius: 8px;">
-            <p style="margin: 0;"><strong>Shipping To:</strong></p>
-            <p style="margin: 5px 0 0;">${request.shippingDetails?.deliveryType === 'Multiple Locations' ? 'Multiple Locations:' : employee.address}</p>
-            ${request.shippingDetails?.deliveryType === 'Multiple Locations' ? `
-              <ul style="margin: 10px 0 0; padding-left: 20px; font-size: 13px; color: #4b5563;">
-                ${request.shippingDetails.multipleLocations.map((loc, idx) => `<li style="margin-bottom: 4px;"><strong>#${idx + 1}</strong>: ${loc}</li>`).join('')}
-              </ul>
-            ` : ''}
-            ${request.shippingDetails?.deliveryTimeline ? `
-              <p style="margin: 10px 0 0; font-size: 13px; color: #166534;"><strong>Timeline:</strong> ${request.shippingDetails.deliveryTimeline}</p>
-            ` : ''}
+            <p style="margin: 0;"><strong>Delivery Address:</strong></p>
+            <p style="margin: 5px 0 0;">${employee.address}</p>
+            <p style="margin: 10px 0 0; font-size: 13px; color: #166534;"><strong>Shipping:</strong> Standard Delivery</p>
           </div>
 
           <table style="width: 100%; border-collapse: collapse;">

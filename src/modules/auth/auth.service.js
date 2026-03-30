@@ -1,5 +1,5 @@
 import User from '../users/user.model.js';
-import Company from '../company/company.model.js'; 
+import Company from '../company/company.model.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -27,7 +27,7 @@ export const registerUser = async (userData) => {
   return userResponse;
 };
 
-  
+
 export const loginUser = async (email, password, subdomain) => {
   let user;
 
@@ -35,11 +35,11 @@ export const loginUser = async (email, password, subdomain) => {
   if (!subdomain || subdomain === 'admin') {
     // Only look for a user with the 'admin' role
     user = await User.findOne({ email, role: 'admin' });
-    
+
     if (!user) {
       throw new Error('Unauthorized: Admin account not found');
     }
-  } 
+  }
   // Otherwise, it's a tenant (company) login
   else {
     const company = await Company.findOne({ subdomain });
@@ -47,11 +47,11 @@ export const loginUser = async (email, password, subdomain) => {
       throw new Error('Invalid company portal');
     }
 
-    user = await User.findOne({ 
+    user = await User.findOne({
       email,
-      companyId: company._id 
+      companyId: company._id
     }).populate('companyId');
-    
+
     if (!user) {
       throw new Error('Invalid credentials for this company');
     }
@@ -61,17 +61,52 @@ export const loginUser = async (email, password, subdomain) => {
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) throw new Error('Invalid email or password');
 
-  const token = jwt.sign(
-    { 
-      id: user._id, 
-      role: user.role, 
-      companyId: user.companyId ? user.companyId._id : null 
+  const accessToken = jwt.sign(
+    {
+      id: user._id,
+      role: user.role,
+      companyId: user.companyId ? user.companyId._id : null
     },
     process.env.JWT_SECRET,
-    { expiresIn: '1d' }
+    { expiresIn: '30m' }
+  );
+
+  const refreshToken = jwt.sign(
+    {
+      id: user._id,
+      role: user.role,
+      companyId: user.companyId ? user.companyId._id : null
+    },
+    process.env.JWT_SECRET, // Using same secret for simplicity, can be different
+    { expiresIn: '30d' }
   );
 
   const userResponse = user.toObject();
   delete userResponse.password;
-  return { user: userResponse, token };
+  return { user: userResponse, accessToken, refreshToken };
+};
+
+export const refreshTokenService = async (token) => {
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const accessToken = jwt.sign(
+      {
+        id: user._id,
+        role: user.role,
+        companyId: user.companyId ? (user.companyId._id || user.companyId) : null
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '30m' }
+    );
+
+    return { accessToken };
+  } catch (err) {
+    throw new Error('Invalid refresh token');
+  }
 };

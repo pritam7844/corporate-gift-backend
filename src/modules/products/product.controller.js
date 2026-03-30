@@ -25,14 +25,14 @@ export const addProduct = async (req, res, next) => {
     // Parse numeric fields if they come as strings from FormData
     if (productData.actualPrice) productData.actualPrice = Number(productData.actualPrice);
     if (productData.discountedPrice) productData.discountedPrice = Number(productData.discountedPrice);
-    
+
     // Handle isGlobal and companyId
     if (productData.isGlobal === 'true' || productData.isGlobal === true) {
-        productData.isGlobal = true;
-        productData.companyId = null;
+      productData.isGlobal = true;
+      productData.companyId = null;
     } else {
-        productData.isGlobal = false;
-        // companyId should be provided in req.body
+      productData.isGlobal = false;
+      // companyId should be provided in req.body
     }
 
     const product = await productService.createProduct(productData);
@@ -46,11 +46,11 @@ export const addProduct = async (req, res, next) => {
 export const getProducts = async (req, res, next) => {
   try {
     const filter = {};
-    
+
     // If the Admin only wants to see Global products
     if (req.query.global === 'true') {
       filter.companyId = null;
-    } 
+    }
     // If the Admin wants to see products for a specific company
     else if (req.query.companyId) {
       // Typically, an Admin wants to see Global items + This Company's items
@@ -102,12 +102,12 @@ export const updateProduct = async (req, res, next) => {
 
     if (productData.actualPrice) productData.actualPrice = Number(productData.actualPrice);
     if (productData.discountedPrice) productData.discountedPrice = Number(productData.discountedPrice);
-    
+
     if (productData.isGlobal === 'true' || productData.isGlobal === true) {
-        productData.isGlobal = true;
-        productData.companyId = null;
+      productData.isGlobal = true;
+      productData.companyId = null;
     } else if (productData.isGlobal === 'false' || productData.isGlobal === false) {
-        productData.isGlobal = false;
+      productData.isGlobal = false;
     }
 
     const product = await productService.updateProduct(req.params.id, productData);

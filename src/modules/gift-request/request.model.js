@@ -16,21 +16,22 @@ const requestSchema = new mongoose.Schema({
     email: { type: String, required: true },
     phone: { type: String, required: true },
     whatsapp: { type: String },
-    address: { type: String }, // Made optional to support Multiple Locations
+    address: { type: String }, // Delivery Address
     employeeId: { type: String, required: true }, // Mandatory as requested
-    department: { type: String } // Optional
+    department: { type: String }, // Optional
+    additionalRequirements: { type: String } // Optional notes
   },
   customization: {
     isBrandingRequired: { type: Boolean, default: false },
     brandingType: { type: String }, // Digital Print, Screen Print, etc.
-    brandingPositions: { type: Number }, // 1, 2, 3
-    brandingSize: { type: String }, // 1-3, 3-5, 5-10 inches
+    brandingPositions: { type: mongoose.Schema.Types.Mixed }, // Can be Number (1,2,3) or String ("Custom")
+    customBrandingPositions: { type: String }, // Details if "Custom"
+    brandingSize: { type: String }, // 1-3, 3-5, 5-10 inches or "Custom"
+    customBrandingSize: { type: String }, // Details if "Custom"
     brandingLogo: { type: String } // Cloudinary URL
   },
   shippingDetails: {
-    deliveryType: { type: String, enum: ['Single Location', 'Multiple Locations'], default: 'Single Location' },
-    multipleLocations: [{ type: String }], // Array of addresses for multiple locations
-    deliveryTimeline: { type: String } // Required delivery date/timeline
+    deliveryType: { type: String, enum: ['Single Location'], default: 'Single Location' },
   },
   selectedProducts: [{
     productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },

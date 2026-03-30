@@ -34,17 +34,14 @@ export const generateInvoice = (request) => {
             // ── Bill To + Order Details ──────────────────────────────────────────────
             const yInfo = doc.y;
 
-            doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e40af').text('Billed / Shipped To:', 50, yInfo);
-            let addressText = employee.address;
-            if (request.shippingDetails?.deliveryType === 'Multiple Locations' && Array.isArray(request.shippingDetails.multipleLocations)) {
-                addressText = 'Multiple Locations:\n' + request.shippingDetails.multipleLocations.map((loc, i) => `${i + 1}. ${loc}`).join('\n');
-            }
+            doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e40af').text('Delivery Details:', 50, yInfo);
+            let addressText = employee.address || 'N/A';
 
             doc.fontSize(10).font('Helvetica').fillColor('#111827')
                 .text('Name: ' + employee.name, 50, yInfo + 18)
                 .text('Email: ' + employee.email, 50, yInfo + 33)
                 .text('Phone: ' + employee.phone, 50, yInfo + 48)
-                .text('Address: ' + addressText, 50, yInfo + 63, { width: 220 });
+                .text('Delivery Address: ' + addressText, 50, yInfo + 63, { width: 220 });
 
             doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e40af').text('Order Details:', 350, yInfo);
             doc.fontSize(10).font('Helvetica').fillColor('#111827')

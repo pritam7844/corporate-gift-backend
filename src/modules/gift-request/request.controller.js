@@ -1,4 +1,6 @@
 import * as requestService from './request.service.js';
+import Event from '../events/event.model.js';
+import Request from './request.model.js';
 
 export const createRequest = async (req, res, next) => {
   try {
@@ -9,6 +11,35 @@ export const createRequest = async (req, res, next) => {
 
     if (!selectedProducts || selectedProducts.length === 0) {
       return res.status(400).json({ success: false, message: 'Your cart is empty.' });
+    }
+
+    // Sample Order Constraints Validation
+    if (selectedProducts.length > 3) {
+      return res.status(400).json({ success: false, message: 'Maximum 3 different products are allowed for a sample order.' });
+    }
+
+    const hasInvalidQuantity = selectedProducts.some(p => p.quantity > 1);
+    if (hasInvalidQuantity) {
+      return res.status(400).json({ success: false, message: 'Maximum 1 unit per product is allowed for sample orders.' });
+    }
+
+    // One Order Per Event Cycle Validation
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ success: false, message: 'Event not found.' });
+    }
+
+    const existingOrder = await Request.findOne({
+      eventId: eventId,
+      'employeeDetails.email': employeeDetails.email,
+      createdAt: { $gte: event.startDate }
+    });
+
+    if (existingOrder) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `You have already placed a sample order for the "${event.name}" event during this period.` 
+      });
     }
 
     const requestData = {

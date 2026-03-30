@@ -11,6 +11,7 @@ import cartRoutes from './modules/cart/cart.routes.js';
 import supportRoutes from './modules/support/support.routes.js';
 import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
 import uploadRoutes from './modules/upload/upload.routes.js';
+import newArrivalRoutes from './modules/new-arrivals/new-arrival.routes.js';
 
 const app = express();
 
@@ -60,6 +61,7 @@ app.use('/users', userRoutes);
 app.use('/dashboard', dashboardRoutes);
 app.use('/support', supportRoutes);
 app.use('/upload', uploadRoutes);
+app.use('/new-arrivals', newArrivalRoutes);
 
 // Error Middleware (Standard)
 app.use((err, req, res, next) => {

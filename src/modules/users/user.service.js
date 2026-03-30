@@ -1,4 +1,5 @@
 import User from './user.model.js';
+import bcrypt from 'bcryptjs';
 
 export const getUserProfile = async (userId) => {
   const user = await User.findById(userId)
@@ -17,18 +18,28 @@ export const getAllUsers = async (filters = {}) => {
 };
 
 export const updateUser = async (userId, updateData) => {
-  // Prevent updating the password through this general update route
-  if (updateData.password) {
-    delete updateData.password;
+  try {
+    const user = await User.findById(userId);
+    if (!user) throw new Error('User not found');
+
+    // Update name if provided
+    if (updateData.name) user.name = updateData.name;
+
+    // Update password if provided
+    if (updateData.password && updateData.password.trim() !== '') {
+      const salt = await bcrypt.getSalt(10);
+      user.password = await bcrypt.hash(updateData.password, salt);
+    }
+
+    const savedUser = await user.save();
+    
+    // Return user without password
+    const result = savedUser.toObject();
+    delete result.password;
+    return result;
+  } catch (error) {
+    throw error; // Re-throw to be caught by controller
   }
-
-  const updatedUser = await User.findByIdAndUpdate(userId, updateData, { 
-    new: true, 
-    runValidators: true 
-  }).select('-password');
-
-  if (!updatedUser) throw new Error('User not found');
-  return updatedUser;
 };
 
 export const deleteUser = async (userId) => {
