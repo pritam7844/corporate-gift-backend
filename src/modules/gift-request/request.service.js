@@ -129,46 +129,6 @@ export const submitGiftRequest = async (requestData) => {
       </div>
     `;
 
-    // --- Employee Email HTML ---
-    const employeeHtml = `
-      <div style="${sharedStyles}">
-        <div style="background: #059669; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
-          <h1 style="margin: 0; font-size: 24px;">Order Confirmed!</h1>
-          <p style="margin: 5px 0 0; opacity: 0.9;">Hello ${employee.name}, your choice has been reserved.</p>
-        </div>
-        <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
-          <p>Thank you for participating in the <strong>${event?.name || 'Corporate Gift'}</strong> event! We have received your selection and are preparing it for delivery.</p>
-          
-          <div style="margin: 20px 0; padding: 15px; background: #f0fdf4; border-radius: 8px;">
-            <p style="margin: 0;"><strong>Delivery Address:</strong></p>
-            <p style="margin: 5px 0 0;">${employee.address}</p>
-            <p style="margin: 10px 0 0; font-size: 13px; color: #166534;"><strong>Shipping:</strong> Standard Delivery</p>
-          </div>
-
-          <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-              <tr style="color: #6b7280; font-size: 12px; text-transform: uppercase;">
-                <th style="padding: 10px 0; text-align: left; border-bottom: 1px solid #eee;">Item</th>
-                <th style="padding: 10px 0; text-align: right; border-bottom: 1px solid #eee;">Quantity</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${products.map(p => `
-                <tr>
-                  <td style="padding: 12px 0; border-bottom: 1px solid #eee;">${p.productId.name}</td>
-                  <td style="padding: 12px 0; border-bottom: 1px solid #eee; text-align: right;">${p.quantity}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-
-          <p style="margin-top: 25px; font-size: 14px; color: #6b7280; text-align: center;">
-            Need help? Contact your HR department or reply to this email.
-          </p>
-        </div>
-      </div>
-    `;
-
     // Generate Invoice PDF
     let invoicePdf = null;
     try {
@@ -178,33 +138,33 @@ export const submitGiftRequest = async (requestData) => {
     }
 
     // Send Email to Admin (with invoice PDF attachment)
-    if (adminEmail) {
-      const attachments = invoicePdf
-        ? [{
-          filename: `Invoice-${populatedRequest.orderId}.pdf`,
-          content: invoicePdf,
-          contentType: 'application/pdf'
-        }]
-        : [];
+    const attachments = invoicePdf
+      ? [{
+        filename: `Invoice-${populatedRequest.orderId}.pdf`,
+        content: invoicePdf,
+        contentType: 'application/pdf'
+      }]
+      : [];
 
-      // Add Branding Logo to attachments if present
-      if (request.customization?.brandingLogo) {
-        try {
-          const logoResponse = await axios.get(request.customization.brandingLogo, { responseType: 'arraybuffer' });
-          const logoBuffer = Buffer.from(logoResponse.data, 'binary');
+    // Add Branding Logo to attachments if present
+    if (request.customization?.brandingLogo) {
+      try {
+        const logoResponse = await axios.get(request.customization.brandingLogo, { responseType: 'arraybuffer' });
+        const logoBuffer = Buffer.from(logoResponse.data, 'binary');
 
-          // Get extension from URL or fallback to png
-          const extension = request.customization.brandingLogo.split('.').pop().split(/\#|\?/)[0] || 'png';
+        // Get extension from URL or fallback to png
+        const extension = request.customization.brandingLogo.split('.').pop().split(/\#|\?/)[0] || 'png';
 
-          attachments.push({
-            filename: `Branding-Logo.${extension}`,
-            content: logoBuffer
-          });
-        } catch (logoErr) {
-          console.error('Failed to attach logo to email:', logoErr.message);
-        }
+        attachments.push({
+          filename: `Branding-Logo.${extension}`,
+          content: logoBuffer
+        });
+      } catch (logoErr) {
+        console.error('Failed to attach logo to email:', logoErr.message);
       }
+    }
 
+    if (adminEmail) {
       await sendEmail({
         to: adminEmail,
         subject: `New Order: ${company?.name || 'N/A'} - ${employee.name}`,
@@ -214,13 +174,73 @@ export const submitGiftRequest = async (requestData) => {
       });
     }
 
+    // Prepare separate attachments for Employee (No Invoice)
+    const employeeAttachments = attachments.filter(att => !att.filename.startsWith('Invoice-'));
+
+    // --- Employee Email HTML (Refined with all details) ---
+    const employeeHtml = `
+      <div style="${sharedStyles}">
+        <div style="background: #059669; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+          <h1 style="margin: 0; font-size: 24px;">Order Confirmed!</h1>
+          <p style="margin: 5px 0 0; opacity: 0.9;">Hello ${employee.name}, your gift choice for ${event?.name || 'the event'} has been reserved.</p>
+        </div>
+        <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+          <div style="margin-bottom: 20px;">
+            <p>We've received your selection from <strong>${company?.name || 'your company'}</strong>. You'll receive another notification once your gift is delivered.</p>
+          </div>
+
+          <div style="margin-bottom: 25px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
+            <h2 style="font-size: 16px; color: #1e40af; border-bottom: 2px solid #eff6ff; padding-bottom: 8px; margin-top: 0;">Employee & Shipping Details</h2>
+            <p style="margin: 5px 0;"><strong>Name:</strong> ${employee.name}</p>
+            <p style="margin: 5px 0;"><strong>Employee ID:</strong> ${employee.employeeId || 'N/A'}</p>
+            <p style="margin: 10px 0 0;"><strong>Delivery Address:</strong><br/>${employee.address}</p>
+          </div>
+
+          ${request.customization?.isBrandingRequired ? `
+          <div style="margin-bottom: 25px; background: #fff7ed; padding: 15px; border-radius: 8px; border: 1px solid #ffedd5;">
+            <h2 style="font-size: 16px; color: #9a3412; border-bottom: 2px solid #ffedd5; padding-bottom: 8px; margin-top: 0;">Customization Requirements</h2>
+            <p><strong>Branding:</strong> ${request.customization.brandingType} (${request.customization.brandingSize})</p>
+            ${request.customization.brandingLogo ? `<p style="font-size: 11px; color: #9a3412;">Branding logo has been attached to this order.</p>` : ''}
+          </div>
+          ` : ''}
+
+          <div style="margin-bottom: 25px;">
+            <h2 style="font-size: 16px; color: #1e40af; border-bottom: 2px solid #eff6ff; padding-bottom: 8px;">Your Selected Items</h2>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+              <thead>
+                <tr style="background: #f8fafc;">
+                  <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb; font-size: 12px;">Product</th>
+                  <th style="padding: 10px; text-align: center; border-bottom: 2px solid #e5e7eb; font-size: 12px;">Qty</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${products.map(p => `
+                  <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;">${p.productId.name}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px;">${p.quantity}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <p style="margin-top: 25px; font-size: 13px; color: #6b7280; text-align: center;">
+            Need to change something? Reach out to your HR department as soon as possible.
+          </p>
+        </div>
+      </div>
+    `;
+
     // Send Confirmation Email to Employee
-    // await sendEmail({
-    //   to: employee.email,
-    //   subject: `🎁 Order Confirmed: ${event?.name || 'Your Gift Selection'}`,
-    //   html: employeeHtml,
-    //   text: `Hello ${employee.name}, your order has been received and is being processed.`
-    // });
+    if (employee.email) {
+      await sendEmail({
+        to: employee.email,
+        subject: `🎁 Order Confirmed: Your Selection for ${event?.name || 'Corporate Gift'}`,
+        html: employeeHtml,
+        text: `Hello ${employee.name}, your choice for ${event?.name} has been received and confirmed.`,
+        attachments: employeeAttachments
+      });
+    }
 
     // Send WhatsApp to Admin
     // if (adminPhone) {
@@ -253,9 +273,64 @@ export const getUserRequests = async (email) => {
 
 // For the Admin Dashboard: Update request status
 export const updateRequestStatus = async (requestId, status) => {
-  return await Request.findByIdAndUpdate(
+  const updatedRequest = await Request.findByIdAndUpdate(
     requestId,
     { status },
     { new: true, runValidators: true }
-  ).populate('eventId', 'name').populate('selectedProducts.productId', 'name images image category');
+  ).populate('companyId', 'name subdomain')
+    .populate('eventId', 'name')
+    .populate('selectedProducts.productId', 'name images image category');
+
+  if (!updatedRequest) return null;
+
+  // Send Delivery Notification to Employee ONLY if status is 'Delivered'
+  if (status === 'Delivered' && updatedRequest.employeeDetails?.email) {
+    try {
+      const company = updatedRequest.companyId;
+      const event = updatedRequest.eventId;
+      const employee = updatedRequest.employeeDetails;
+      const products = updatedRequest.selectedProducts;
+
+      const productList = products.map(p => `<li>${p.productId.name} (Qty: ${p.quantity})</li>`).join('');
+
+      const deliveryHtml = `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
+          <div style="background: #059669; color: white; padding: 30px; text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 15px;">🎁</div>
+            <h1 style="margin: 0; font-size: 24px; font-weight: 800;">Your Gift Has Arrived!</h1>
+            <p style="margin: 10px 0 0; opacity: 0.9;">Order #${updatedRequest.orderId}</p>
+          </div>
+          
+          <div style="padding: 30px;">
+            <p style="font-size: 16px;">Hello <strong>${employee.name}</strong>,</p>
+            <p>Great news! Your selection for the <strong>${event?.name || 'Corporate Gift'}</strong> event by <strong>${company?.name || 'your company'}</strong> has been successfully delivered.</p>
+            
+            <div style="margin: 25px 0; padding: 20px; background: #f0fdf4; border-radius: 8px; border: 1px solid #dcfce7;">
+              <h3 style="margin-top: 0; color: #065f46; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;">Delivered Items</h3>
+              <ul style="margin: 10px 0 0; padding-left: 20px; color: #065f46; font-weight: 500;">
+                ${productList}
+              </ul>
+            </div>
+
+            <p style="color: #6b7280; font-size: 14px;">We hope you enjoy your gift! If you have any questions or feedback regarding your delivery, please reach out to your HR department.</p>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #f3f4f6; text-align: center;">
+              <p style="margin: 0; font-size: 12px; color: #9ca3af;">&copy; 2026 Corporate Gift Platform. All rights reserved.</p>
+            </div>
+          </div>
+        </div>
+      `;
+
+      await sendEmail({
+        to: employee.email,
+        subject: `🎁 Delivered: Your ${event?.name || 'Gift Selection'} is here!`,
+        html: deliveryHtml,
+        text: `Hello ${employee.name}, your choice for ${event?.name} has been delivered. Enjoy your gift!`
+      });
+    } catch (err) {
+      console.error('Failed to send status update email:', err.message);
+    }
+  }
+
+  return updatedRequest;
 };
