@@ -37,7 +37,13 @@ const requestSchema = new mongoose.Schema({
     productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
     quantity: { type: Number, required: true, default: 1 },
     actualPrice: { type: Number, required: true },
-    discountedPrice: { type: Number, required: true }
+    discountedPrice: { type: Number, required: true },
+    // Per-product customization
+    brandingType: { type: String }, // Digital Print, Screen Print, etc.
+    brandingPositions: { type: mongoose.Schema.Types.Mixed }, // Can be Number (1,2,3) or String ("Custom")
+    customBrandingPositions: { type: String }, // Details if "Custom"
+    brandingSize: { type: String }, // 1-3, 3-5, 5-10 inches or "Custom"
+    customBrandingSize: { type: String } // Details if "Custom"
   }],
   status: {
     type: String,

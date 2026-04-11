@@ -78,21 +78,33 @@ export const generateInvoice = (request) => {
                 const itemTotal = pricePerUnit * p.quantity;
                 grandTotal += itemTotal;
 
-                // Alternating row background
-                if (index % 2 === 0) {
-                    doc.rect(50, rowY - 5, 500, 18).fill('#f9fafb');
-                }
-
                 const name = p.productId?.name || 'Product';
                 const truncName = name.length > 38 ? name.substring(0, 38) + '...' : name;
 
-                doc.fillColor('#111827')
-                    .text(truncName, col.name, rowY, { width: 240 })
+                // Branding Info
+                const hasBranding = request.customization?.isBrandingRequired;
+                const brandingInfo = hasBranding ? `${p.brandingType || 'Standard'} | ${p.brandingPositions === 'Custom' ? (p.customBrandingPositions || 'Custom') : (p.brandingPositions || '1')} Pos | ${p.brandingSize === 'Custom' ? (p.customBrandingSize || 'Custom') : (p.brandingSize || 'Standard')}` : null;
+
+                const rowHeight = hasBranding ? 30 : 20;
+
+                // Alternating row background
+                if (index % 2 === 0) {
+                    doc.rect(50, rowY - 5, 500, rowHeight - 2).fill('#f9fafb');
+                }
+
+                doc.fillColor('#111827').font('Helvetica').fontSize(9)
+                    .text(truncName, col.name, rowY, { width: 240 });
+                
+                if (hasBranding) {
+                    doc.fontSize(7).fillColor('#6b7280').text(brandingInfo, col.name, rowY + 11, { width: 240 });
+                }
+
+                doc.fontSize(9).fillColor('#111827')
                     .text(String(p.quantity), col.qty, rowY, { width: 60, align: 'center' })
                     .text('Rs. ' + pricePerUnit.toFixed(2), col.price, rowY, { width: 90, align: 'right' })
                     .text('Rs. ' + itemTotal.toFixed(2), col.total, rowY, { width: 60, align: 'right' });
 
-                rowY += 20;
+                rowY += rowHeight;
             });
 
             // ── Totals ──────────────────────────────────────────────────────────────

@@ -28,10 +28,17 @@ export const submitGiftRequest = async (requestData) => {
     const productRows = products.map(p => `
       <tr>
         <td style="padding: 12px; border-bottom: 1px solid #eee;">
-          <div style="display: flex; align-items: center;">
+          <div style="display: flex; align-items: center; margin-bottom: 8px;">
             <img src="${p.productId.images?.[0] || p.productId.image}" alt="${p.productId.name}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; margin-right: 10px;" />
-            <span>${p.productId.name}</span>
+            <span style="font-weight: bold;">${p.productId.name}</span>
           </div>
+          ${populatedRequest.customization?.isBrandingRequired ? `
+            <div style="font-size: 11px; color: #6b7280; background: #f9fafb; padding: 8px; border-radius: 6px; margin-top: 4px; border: 1px solid #f1f5f9;">
+              <p style="margin: 2px 0;"><strong>Branding Type:</strong> ${p.brandingType || 'Standard'}</p>
+              <p style="margin: 2px 0;"><strong>Positions:</strong> ${p.brandingPositions === 'Custom' ? p.customBrandingPositions : p.brandingPositions || 'N/A'}</p>
+              <p style="margin: 2px 0;"><strong>Size:</strong> ${p.brandingSize === 'Custom' ? p.customBrandingSize : p.brandingSize || 'N/A'}</p>
+            </div>
+          ` : ''}
         </td>
         <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: center;">${p.quantity}</td>
         <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right;">₹${p.discountedPrice.toLocaleString()}</td>
@@ -70,12 +77,10 @@ export const submitGiftRequest = async (requestData) => {
 
           ${request.customization?.isBrandingRequired ? `
           <div style="margin-bottom: 25px; background: #fff7ed; padding: 15px; border-radius: 8px; border: 1px solid #ffedd5;">
-            <h2 style="font-size: 18px; color: #9a3412; border-bottom: 2px solid #ffedd5; padding-bottom: 8px; margin-top: 0;">Branding Requirements</h2>
-            <p><strong>Type:</strong> ${request.customization.brandingType}</p>
-            <p><strong>Positions:</strong> ${request.customization.brandingPositions === 'Custom' ? request.customization.customBrandingPositions : request.customization.brandingPositions}</p>
-            <p><strong>Size:</strong> ${request.customization.brandingSize === 'Custom' ? request.customization.customBrandingSize : request.customization.brandingSize}</p>
+            <h2 style="font-size: 18px; color: #9a3412; border-bottom: 2px solid #ffedd5; padding-bottom: 8px; margin-top: 0;">Branding Information</h2>
+            <p style="color: #64748b; font-size: 13px;">Individual branding details are listed below each product in the items table.</p>
             ${request.customization.brandingLogo ? `
-              <p><strong>Branding Logo:</strong> <a href="${request.customization.brandingLogo}" target="_blank" style="color: #2563eb; font-weight: bold;">View Logo File</a></p>
+              <p><strong>Shared Branding Logo:</strong> <a href="${request.customization.brandingLogo}" target="_blank" style="color: #2563eb; font-weight: bold;">View Logo File</a></p>
               <div style="margin-top: 10px;">
                 <img src="${request.customization.brandingLogo}" alt="Logo" style="max-width: 200px; max-height: 100px; border: 1px solid #ddd; border-radius: 4px;" />
               </div>
@@ -187,6 +192,7 @@ export const submitGiftRequest = async (requestData) => {
         <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
           <div style="margin-bottom: 20px;">
             <p>We've received your selection from <strong>${company?.name || 'your company'}</strong>. You'll receive another notification once your gift is delivered.</p>
+            <p style="font-weight: bold; color: #059669; background: #ecfdf5; padding: 10px; border-radius: 6px; display: inline-block;">🚚 Estimated Delivery: 4-5 working days</p>
           </div>
 
           <div style="margin-bottom: 25px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
@@ -198,9 +204,9 @@ export const submitGiftRequest = async (requestData) => {
 
           ${request.customization?.isBrandingRequired ? `
           <div style="margin-bottom: 25px; background: #fff7ed; padding: 15px; border-radius: 8px; border: 1px solid #ffedd5;">
-            <h2 style="font-size: 16px; color: #9a3412; border-bottom: 2px solid #ffedd5; padding-bottom: 8px; margin-top: 0;">Customization Requirements</h2>
-            <p><strong>Branding:</strong> ${request.customization.brandingType} (${request.customization.brandingSize})</p>
-            ${request.customization.brandingLogo ? `<p style="font-size: 11px; color: #9a3412;">Branding logo has been attached to this order.</p>` : ''}
+            <h2 style="font-size: 16px; color: #9a3412; border-bottom: 2px solid #ffedd5; padding-bottom: 8px; margin-top: 0;">Branding Requirements</h2>
+            <p style="font-size: 12px; color: #9a3412; margin-bottom: 10px;">Your unique branding choices for each item are detailed in the table below.</p>
+            ${request.customization.brandingLogo ? `<p style="font-size: 11px; color: #9a3412;">Shared branding logo has been attached to this order.</p>` : ''}
           </div>
           ` : ''}
 
@@ -216,8 +222,17 @@ export const submitGiftRequest = async (requestData) => {
               <tbody>
                 ${products.map(p => `
                   <tr>
-                    <td style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;">${p.productId.name}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px;">${p.quantity}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;">
+                      <div style="font-weight: bold; margin-bottom: 4px;">${p.productId.name}</div>
+                      ${populatedRequest.customization?.isBrandingRequired ? `
+                        <div style="font-size: 11px; color: #6b7280; background: #f9fafb; padding: 8px; border-radius: 4px; border: 1px solid #f1f5f9; margin-top: 5px;">
+                          <p style="margin: 2px 0;"><strong>Branding:</strong> ${p.brandingType || 'Standard'}</p>
+                          <p style="margin: 2px 0;"><strong>Position:</strong> ${p.brandingPositions === 'Custom' ? p.customBrandingPositions : p.brandingPositions || 'N/A'}</p>
+                          <p style="margin: 2px 0;"><strong>Size/Dimension:</strong> ${p.brandingSize || 'N/A'}</p>
+                        </div>
+                      ` : ''}
+                    </td>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px; vertical-align: top;">${p.quantity}</td>
                   </tr>
                 `).join('')}
               </tbody>
