@@ -14,16 +14,7 @@ export const addProductsToEvent = async (eventId, productIds) => {
 };
 
 export const getEventsByCompany = async (companyId) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // normalize to start of day
-
-  // Return only events that are within today's date window
-  // startDate <= today <= endDate
-  return await Event.find({
-    companyId,
-    startDate: { $lte: today },
-    endDate: { $gte: today },
-  }).populate('products');
+  return await Event.find({ companyId }).populate('products');
 };
 
 // UPDATED: Accept a filter object
