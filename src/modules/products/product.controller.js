@@ -1,28 +1,13 @@
-import cloudinary from '../../config/cloudinary.js';
 import * as productService from './product.service.js';
 
 export const addProduct = async (req, res, next) => {
   try {
     const productData = { ...req.body };
 
-    // Handle Multiple Image Uploads if files exist
-    if (req.files && req.files.length > 0) {
-      const uploadPromises = req.files.map(file => {
-        return new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            { folder: 'products', resource_type: 'auto' },
-            (error, result) => {
-              if (error) reject(error);
-              else resolve(result.secure_url);
-            }
-          );
-          stream.end(file.buffer);
-        });
-      });
-      productData.images = await Promise.all(uploadPromises);
-    }
+    // Images are now uploaded directly from the frontend and sent as URLs
+    // req.body.images should be an array of strings
 
-    // Parse numeric fields if they come as strings from FormData
+    // Parse numeric fields if they come as strings
     if (productData.actualPrice) productData.actualPrice = Number(productData.actualPrice);
     if (productData.discountedPrice) productData.discountedPrice = Number(productData.discountedPrice);
 
@@ -71,34 +56,7 @@ export const updateProduct = async (req, res, next) => {
   try {
     const productData = { ...req.body };
 
-    let existingImages = [];
-    if (req.body.images) {
-      try {
-        existingImages = typeof req.body.images === 'string' ? JSON.parse(req.body.images) : req.body.images;
-        if (!Array.isArray(existingImages)) existingImages = [existingImages];
-      } catch (e) {
-        existingImages = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
-      }
-    }
-
-    if (req.files && req.files.length > 0) {
-      const uploadPromises = req.files.map(file => {
-        return new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            { folder: 'products', resource_type: 'auto' },
-            (error, result) => {
-              if (error) reject(error);
-              else resolve(result.secure_url);
-            }
-          );
-          stream.end(file.buffer);
-        });
-      });
-      const newImages = await Promise.all(uploadPromises);
-      productData.images = [...existingImages, ...newImages];
-    } else {
-      productData.images = existingImages;
-    }
+    // images already come as an array of URLs from the frontend
 
     if (productData.actualPrice) productData.actualPrice = Number(productData.actualPrice);
     if (productData.discountedPrice) productData.discountedPrice = Number(productData.discountedPrice);
