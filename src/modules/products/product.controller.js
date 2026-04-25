@@ -52,6 +52,15 @@ export const getProducts = async (req, res, next) => {
   }
 };
 
+export const getProductById = async (req, res, next) => {
+  try {
+    const product = await productService.getProductById(req.params.id);
+    res.status(200).json({ success: true, data: product });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const updateProduct = async (req, res, next) => {
   try {
     const productData = { ...req.body };

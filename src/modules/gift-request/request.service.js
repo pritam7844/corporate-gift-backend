@@ -30,7 +30,10 @@ export const submitGiftRequest = async (requestData) => {
         <td style="padding: 12px; border-bottom: 1px solid #eee;">
           <div style="display: flex; align-items: center; margin-bottom: 8px;">
             <img src="${p.productId.images?.[0] || p.productId.image}" alt="${p.productId.name}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; margin-right: 10px;" />
-            <span style="font-weight: bold;">${p.productId.name}</span>
+            <div>
+              <span style="font-weight: bold; display: block;">${p.productId.name}</span>
+              ${p.productId.description ? `<p style="margin: 4px 0 0; font-size: 11px; color: #64748b; line-height: 1.4;">${p.productId.description}</p>` : ''}
+            </div>
           </div>
           ${populatedRequest.customization?.isBrandingRequired ? `
             <div style="font-size: 11px; color: #6b7280; background: #f9fafb; padding: 8px; border-radius: 6px; margin-top: 4px; border: 1px solid #f1f5f9;">
@@ -224,6 +227,7 @@ export const submitGiftRequest = async (requestData) => {
                   <tr>
                     <td style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;">
                       <div style="font-weight: bold; margin-bottom: 4px;">${p.productId.name}</div>
+                      ${p.productId.description ? `<p style="margin: 0 0 8px; font-size: 11px; color: #64748b; line-height: 1.4;">${p.productId.description}</p>` : ''}
                       ${populatedRequest.customization?.isBrandingRequired ? `
                         <div style="font-size: 11px; color: #6b7280; background: #f9fafb; padding: 8px; border-radius: 4px; border: 1px solid #f1f5f9; margin-top: 5px;">
                           <p style="margin: 2px 0;"><strong>Branding:</strong> ${p.brandingType || 'Standard'}</p>
