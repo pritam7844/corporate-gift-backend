@@ -27,7 +27,7 @@ export const updateUser = async (userId, updateData) => {
 
     // Update password if provided
     if (updateData.password && updateData.password.trim() !== '') {
-      const salt = await bcrypt.getSalt(10);
+      const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(updateData.password, salt);
     }
 
